@@ -1,5 +1,5 @@
-import express, { json } from "express";
-import routes from "./routes";
+import express, { json } from 'express';
+import routes from './routes';
 
 class App {
   constructor() {
