@@ -14,6 +14,7 @@ module.exports = {
     sourceType: "module"
   },
   rules: {
+    "linebreak-style": [2, "windows"],
     "prettier/prettier": "error",
     "class-methods-use-this": "off",
     "no-param-reassign": "off",
