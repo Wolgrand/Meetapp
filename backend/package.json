@@ -1,8 +1,8 @@
 {
-  "name": "MeetApp",
+  "name": "GoBarber",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://github.com/Wolgrand/MeetApp.git",
+  "repository": "https://github.com/Wolgrand/GoBarber.git",
   "license": "MIT",
   "scripts": {
     "dev": "nodemon src/server.js",
