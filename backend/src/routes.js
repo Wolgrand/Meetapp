@@ -8,6 +8,7 @@ import FileController from './app/controllers/FileController';
 import BannerController from './app/controllers/BannerController';
 import ProviderController from './app/controllers/ProviderController';
 import AppointmentController from './app/controllers/AppointmentController';
+import MeetingController from './app/controllers/MeetingController';
 import ScheduleController from './app/controllers/ScheduleController';
 import NotificationController from './app/controllers/NotificationController';
 import AvailableController from './app/controllers/AvaiableController';
@@ -28,6 +29,8 @@ routes.get('/providers/:providerId/available', AvailableController.index);
 
 routes.get('/appointments', AppointmentController.index);
 routes.post('/appointments', AppointmentController.store);
+routes.get('/meetings', MeetingController.index);
+routes.post('/meetings', MeetingController.store);
 routes.delete('/appointments/:id', AppointmentController.delete);
 
 routes.get('/schedule', ScheduleController.index);

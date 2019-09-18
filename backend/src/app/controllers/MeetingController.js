@@ -2,12 +2,13 @@ import * as Yup from 'yup';
 import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 import User from '../models/User';
+import File from '../models/File';
 import Banner from '../models/Banner';
 import Meeting from '../models/Meeting';
 import Notification from '../schemas/Notification';
 
-import CancellationMail from '../jobs/CancellationMail';
-import Queue from '../../lib/Queue';
+// import CancellationMail from '../jobs/CancellationMail';
+// import Queue from '../../lib/Queue';
 
 class MeetingController {
   async index(req, res) {
@@ -26,11 +27,16 @@ class MeetingController {
           attributes: ['id', 'name'],
           include: [
             {
-              model: Banner,
-              as: 'banner',
+              model: File,
+              as: 'avatar',
               attributes: ['id', 'path', 'url'],
             },
           ],
+        },
+        {
+          model: Banner,
+          as: 'banner',
+          attributes: ['id', 'path', 'url'],
         },
       ],
     });
