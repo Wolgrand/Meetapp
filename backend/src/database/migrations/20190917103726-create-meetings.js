@@ -23,16 +23,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       },
-      inscritos: {
+      banner: {
         allowNull: true,
-        type: Sequelize.ARRAY(Sequelize.INTEGER),
+        type: Sequelize.IMAGE,
       },
       user_id: {
         type: Sequelize.INTEGER,
         references: { model: 'users', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
-        allowNull: true,
+        allowNull: false,
       },
       canceled_at: {
         type: Sequelize.DATE,

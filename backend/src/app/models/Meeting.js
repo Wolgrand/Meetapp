@@ -5,6 +5,9 @@ class Meeting extends Model {
   static init(sequelize) {
     super.init(
       {
+        titulo: Sequelize.STRING,
+        descricao: Sequelize.TEXT,
+        local: Sequelize.STRING,
         date: Sequelize.DATE,
         canceled_at: Sequelize.DATE,
         past: {

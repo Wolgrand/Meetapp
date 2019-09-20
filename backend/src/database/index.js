@@ -3,11 +3,13 @@ import mongoose from 'mongoose';
 
 import User from '../app/models/User';
 import File from '../app/models/File';
+import Banner from '../app/models/Banner';
 import Appointment from '../app/models/Appointment';
+import Meeting from '../app/models/Meeting';
 
 import databaseConfig from '../config/database';
 
-const models = [User, File, Appointment];
+const models = [User, File, Appointment, Banner, Meeting];
 
 class Database {
   constructor() {
@@ -24,10 +26,10 @@ class Database {
   }
 
   mongo() {
-    this.mongoConnection = mongoose.connect(
-      process.env.MONGO_URL,
-      { useNewUrlParser: true, useFindAndModify: true }
-    );
+    this.mongoConnection = mongoose.connect(process.env.MONGO_URL, {
+      useNewUrlParser: true,
+      useFindAndModify: true,
+    });
   }
 }
 

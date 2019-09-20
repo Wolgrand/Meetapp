@@ -17,13 +17,21 @@ class MeetingController {
     const meetings = await Meeting.findAll({
       where: { user_id: req.userId, canceled_at: null },
       order: ['date'],
-      attributes: ['id', 'date', 'past', 'cancelable'],
+      attributes: [
+        'id',
+        'titulo',
+        'descricao',
+        'local',
+        'date',
+        'past',
+        'cancelable',
+      ],
       limit: 20,
       offset: (page - 1) * 20,
       include: [
         {
           model: User,
-          as: 'host',
+          as: 'user',
           attributes: ['id', 'name'],
           include: [
             {
@@ -45,17 +53,17 @@ class MeetingController {
 
   async store(req, res) {
     const schema = Yup.object().shape({
-      date: Yup.date().required(),
-      descricao: Yup.text().required(),
-      local: Yup.string().required(),
       titulo: Yup.string().required(),
+      descricao: Yup.string().required(),
+      local: Yup.string().required(),
+      date: Yup.date().required(),
     });
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });
     }
 
-    const { date, descricao, local, titulo } = req.body;
+    const { titulo, descricao, local, date } = req.body;
 
     /**
      * Check if provider_id is a provider
@@ -79,26 +87,26 @@ class MeetingController {
      */
 
     const meeting = await Meeting.create({
-      user_id: req.userId,
+      titulo,
       descricao,
       local,
       date,
-      titulo,
+      user_id: req.userId,
     });
 
     /**
      * Notify appointment provider
      */
 
-    const formattedDate = format(
-      hourStart,
-      "'dia' dd 'de' MMMM', às' H:mm'h'",
-      { locale: pt }
-    );
+    // const formattedDate = format(
+    //   hourStart,
+    //   "'dia' dd 'de' MMMM', às' H:mm'h'",
+    //   { locale: pt }
+    // );
 
-    await Notification.create({
-      content: `Meeting ${meeting.titulo} criada com sucesso para ${formattedDate}`,
-    });
+    //   await Notification.create({
+    //     content: `Meeting ${meeting.titulo} criada com sucesso para ${formattedDate}`,
+    //   });
 
     return res.json(meeting);
   }
