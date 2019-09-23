@@ -63,6 +63,16 @@ class MeetingController {
       return res.status(400).json({ error: 'Validation fails' });
     }
 
+    const meetingExists = await Meeting.findOne({
+      where: { titulo: req.body.titulo, date: req.body.date },
+    });
+
+    if (meetingExists) {
+      return res.status(400).json({
+        error: 'A meeting with the same title and date already exist.',
+      });
+    }
+
     const { titulo, descricao, local, date } = req.body;
 
     /**
@@ -111,46 +121,106 @@ class MeetingController {
     return res.json(meeting);
   }
 
-  // async delete(req, res) {
-  //   const appointment = await Appointment.findByPk(req.params.id, {
-  //     include: [
-  //       {
-  //         model: User,
-  //         as: 'provider',
-  //         attributes: ['name', 'email'],
-  //       },
-  //       {
-  //         model: User,
-  //         as: 'user',
-  //         attributes: ['name'],
-  //       },
-  //     ],
-  //   });
+  async delete(req, res) {
+    const meeting = await Meeting.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
+      ],
+    });
 
-  //   if (appointment.user_id !== req.userId) {
-  //     return res.status(401).json({
-  //       error: 'You don´t have permission to cancel this appointment.',
-  //     });
-  //   }
+    if (meeting.user_id !== req.userId) {
+      return res.status(401).json({
+        error: 'You don´t have permission to cancel this meeting.',
+      });
+    }
+    const { id } = req.params;
+    const existMeeting = await Meeting.findOne({
+      where: { id },
+    });
 
-  //   const dateWithSub = subHours(appointment.date, 2);
+    if (!existMeeting) {
+      return res.status(401).json({ error: 'This meeting does not exist' });
+    }
 
-  //   if (isBefore(dateWithSub, new Date())) {
-  //     return res.status(401).json({
-  //       error: 'You can only cancel appointments 2 hours in advance.',
-  //     });
-  //   }
+    const dateWithSub = subHours(meeting.date, 2);
 
-  //   appointment.canceled_at = new Date();
+    if (isBefore(dateWithSub, new Date())) {
+      return res.status(401).json({
+        error: 'You can only cancel meetings 2 hours in advance.',
+      });
+    }
 
-  //   await appointment.save();
+    meeting.canceled_at = new Date();
 
-  //   await Queue.add(CancellationMail.key, {
-  //     appointment,
-  //   });
+    await meeting.save();
 
-  //   return res.json(appointment);
-  // }
+    // await Queue.add(CancellationMail.key, {
+    //   meeting,
+    // });
+
+    return res.json(meeting);
+  }
+
+  async update(req, res) {
+    const schema = Yup.object().shape({
+      titulo: Yup.string(),
+      descricao: Yup.string(),
+      local: Yup.string(),
+      date: Yup.date(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation failed' });
+    }
+
+    const meeting = await Meeting.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
+      ],
+    });
+
+    if (meeting.user_id !== req.userId) {
+      return res.status(401).json({
+        error: 'You don´t have permission to update this meeting.',
+      });
+    }
+
+    await meeting.update(req.body);
+
+    const {
+      id,
+      titulo,
+      descricao,
+      local,
+      date,
+      banner,
+    } = await Meeting.findByPk(req.params.id, {
+      include: [
+        {
+          model: Banner,
+          as: 'banner',
+          attributes: ['id', 'path', 'url'],
+        },
+      ],
+    });
+
+    return res.json({
+      id,
+      titulo,
+      descricao,
+      local,
+      date,
+      banner,
+    });
+  }
 }
 
 export default new MeetingController();

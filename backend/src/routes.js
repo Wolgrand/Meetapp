@@ -31,6 +31,8 @@ routes.get('/appointments', AppointmentController.index);
 routes.post('/appointments', AppointmentController.store);
 routes.get('/meetings', MeetingController.index);
 routes.post('/meetings', MeetingController.store);
+routes.delete('/meetings/:id', MeetingController.delete);
+routes.put('/meetings/:id', MeetingController.update);
 routes.delete('/appointments/:id', AppointmentController.delete);
 
 routes.get('/schedule', ScheduleController.index);
@@ -39,6 +41,6 @@ routes.get('/notifications', NotificationController.index);
 routes.put('/notifications/:id', NotificationController.update);
 
 routes.post('/files', upload.single('file'), FileController.store);
-routes.post('/banners', upload.single('file'), BannerController.store);
+routes.post('/meetings/:id', upload.single('file'), BannerController.store);
 
 export default routes;

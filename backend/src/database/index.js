@@ -6,10 +6,11 @@ import File from '../app/models/File';
 import Banner from '../app/models/Banner';
 import Appointment from '../app/models/Appointment';
 import Meeting from '../app/models/Meeting';
+import Subscription from '../app/models/Subscription';
 
 import databaseConfig from '../config/database';
 
-const models = [User, File, Appointment, Banner, Meeting];
+const models = [User, File, Appointment, Banner, Meeting, Subscription];
 
 class Database {
   constructor() {
