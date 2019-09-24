@@ -3,6 +3,7 @@ import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 import User from '../models/User';
 import File from '../models/File';
+import Banner from '../models/Banner';
 import Subscription from '../models/Subscription';
 import Notification from '../schemas/Notification';
 
@@ -23,12 +24,24 @@ class SubscriptionController {
       include: [
         {
           model: User,
-          as: 'provider',
+          as: 'user',
           attributes: ['id', 'name'],
           include: [
             {
               model: File,
               as: 'avatar',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+        },
+        {
+          model: Meeting,
+          as: 'meeting',
+          attributes: ['id', 'date', 'titulo', 'local', 'descricao'],
+          include: [
+            {
+              model: Banner,
+              as: 'banner',
               attributes: ['id', 'path', 'url'],
             },
           ],
@@ -40,18 +53,19 @@ class SubscriptionController {
 
   async store(req, res) {
     const schema = Yup.object().shape({
-      meeting_id: Yup.number().required(),
-      date: Yup.date().required(),
+      meeting_id: Yup.number(),
+      date: Yup.date(),
     });
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });
     }
 
-    const { meeting_id, date } = req.body;
+    const meeting_id = req.params.id;
+    const meeting = await Meeting.findByPk(meeting_id);
 
     /**
-     * Check if provider_id is a provider
+     * Check if meetup exist
      */
     const checkifMeetingExist = await Meeting.findOne({
       where: { id: meeting_id, canceled_at: null },
@@ -64,10 +78,13 @@ class SubscriptionController {
     }
 
     /**
-     * Check if user_id is equal to provider_id
+     * Check if user is host
      */
+    const checkIfUserIsHost = await Meeting.findOne({
+      where: { id: meeting_id, canceled_at: null, user_id: req.userId },
+    });
 
-    if (user_id === req.userId) {
+    if (checkIfUserIsHost) {
       return res
         .status(401)
         .json({ error: 'You can´t subscribe to meetups created by yourself' });
@@ -75,52 +92,68 @@ class SubscriptionController {
     /**
      * Check for past dates
      */
-    const hourStart = startOfHour(parseISO(date));
+    const { date } = meeting;
 
-    if (isBefore(hourStart, new Date())) {
+    if (isBefore(date, new Date())) {
       return res.status(400).json({ error: 'Past dates are not permitted' });
     }
 
-    /**
-     * Check for date availability
-     */
+    // /**
+    //  * Check for duplicate subscription
+    //  */
 
-    const checkAvailability = await Appointment.findOne({
+    const checkIfAlreadySubscribed = await Subscription.findOne({
       where: {
-        provider_id,
+        meeting_id,
+        user_id: req.userId,
         canceled_at: null,
-        date: hourStart,
       },
     });
 
-    if (checkAvailability) {
-      return res
-        .status(400)
-        .json({ error: 'Appointment date is not available' });
+    if (checkIfAlreadySubscribed) {
+      return res.status(400).json({ error: 'You are already subscribed' });
     }
 
-    const appointment = await Appointment.create({
+    // /**
+    //  * Check for subscription in two meetups at same time
+    //  */
+
+    const checkSameTime = await Subscription.findOne({
+      where: {
+        user_id: req.userId,
+        date,
+        canceled_at: null,
+      },
+    });
+
+    if (checkSameTime) {
+      return res.status(400).json({
+        error: 'You are already subscribed at another meetup at the same time',
+      });
+    }
+
+    const subscription = await Subscription.create({
+      date: meeting.date,
       user_id: req.userId,
-      provider_id,
-      date,
+      meeting_id,
     });
 
     /**
      * Notify appointment provider
      */
-    const user = await User.findByPk(req.userId);
-    const formattedDate = format(
-      hourStart,
-      "'dia' dd 'de' MMMM', às' H:mm'h'",
-      { locale: pt }
-    );
+    // const user = await User.findByPk(req.userId);
+    // const formattedDate = format(
+    //   hourStart,
+    //   "'dia' dd 'de' MMMM', às' H:mm'h'",
+    //   { locale: pt }
+    // );
 
-    await Notification.create({
-      content: `Novo agendamento de ${user.name} para ${formattedDate}`,
-      user: provider_id,
-    });
+    // await Notification.create({
+    //   content: `Novo agendamento de ${user.name} para ${formattedDate}`,
+    //   user: provider_id,
+    // });
 
-    return res.json(appointment);
+    return res.json(subscription);
   }
 
   async delete(req, res) {

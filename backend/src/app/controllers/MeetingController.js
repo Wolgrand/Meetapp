@@ -63,15 +63,15 @@ class MeetingController {
       return res.status(400).json({ error: 'Validation fails' });
     }
 
-    const meetingExists = await Meeting.findOne({
-      where: { titulo: req.body.titulo, date: req.body.date },
-    });
+    // const meetingExists = await Meeting.findOne({
+    //   where: { titulo: req.body.titulo, date: req.body.date },
+    // });
 
-    if (meetingExists) {
-      return res.status(400).json({
-        error: 'A meeting with the same title and date already exist.',
-      });
-    }
+    // if (meetingExists) {
+    //   return res.status(400).json({
+    //     error: 'A meeting with the same title and date already exist.',
+    //   });
+    // }
 
     const { titulo, descricao, local, date } = req.body;
 

@@ -9,6 +9,7 @@ import BannerController from './app/controllers/BannerController';
 import ProviderController from './app/controllers/ProviderController';
 import AppointmentController from './app/controllers/AppointmentController';
 import MeetingController from './app/controllers/MeetingController';
+import SubscriptionController from './app/controllers/SubscriptionController';
 import ScheduleController from './app/controllers/ScheduleController';
 import NotificationController from './app/controllers/NotificationController';
 import AvailableController from './app/controllers/AvaiableController';
@@ -34,6 +35,8 @@ routes.post('/meetings', MeetingController.store);
 routes.delete('/meetings/:id', MeetingController.delete);
 routes.put('/meetings/:id', MeetingController.update);
 routes.delete('/appointments/:id', AppointmentController.delete);
+routes.post('/meetings/:id/subscription', SubscriptionController.store);
+routes.get('/meetings/:id/subscription', SubscriptionController.index);
 
 routes.get('/schedule', ScheduleController.index);
 
