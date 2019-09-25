@@ -37,6 +37,7 @@ routes.put('/meetings/:id', MeetingController.update);
 routes.delete('/appointments/:id', AppointmentController.delete);
 routes.post('/meetings/:id/subscription', SubscriptionController.store);
 routes.get('/meetings/:id/subscription', SubscriptionController.index);
+routes.delete('/meetings/:id/subscription', SubscriptionController.delete);
 
 routes.get('/schedule', ScheduleController.index);
 

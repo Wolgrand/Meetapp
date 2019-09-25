@@ -7,7 +7,7 @@ import Banner from '../models/Banner';
 import Subscription from '../models/Subscription';
 import Notification from '../schemas/Notification';
 
-import CancellationMail from '../jobs/CancellationMail';
+import SubscriptionMail from '../jobs/SubscriptionMail';
 import Queue from '../../lib/Queue';
 import Meeting from '../models/Meeting';
 
@@ -25,7 +25,7 @@ class SubscriptionController {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'email'],
           include: [
             {
               model: File,
@@ -43,6 +43,11 @@ class SubscriptionController {
               model: Banner,
               as: 'banner',
               attributes: ['id', 'path', 'url'],
+            },
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
             },
           ],
         },
@@ -138,6 +143,50 @@ class SubscriptionController {
       meeting_id,
     });
 
+    const meeting_email = await Subscription.findOne({
+      where: {
+        meeting_id,
+        user_id: req.userId,
+        canceled_at: null,
+      },
+
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'name', 'email'],
+          include: [
+            {
+              model: File,
+              as: 'avatar',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+        },
+        {
+          model: Meeting,
+          as: 'meeting',
+          attributes: ['id', 'date', 'titulo', 'local', 'descricao'],
+          include: [
+            {
+              model: Banner,
+              as: 'banner',
+              attributes: ['id', 'path', 'url'],
+            },
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'name', 'email'],
+            },
+          ],
+        },
+      ],
+    });
+
+    await Queue.add(SubscriptionMail.key, {
+      meeting_email,
+    });
+
     /**
      * Notify appointment provider
      */
@@ -157,44 +206,35 @@ class SubscriptionController {
   }
 
   async delete(req, res) {
-    const appointment = await Appointment.findByPk(req.params.id, {
-      include: [
-        {
-          model: User,
-          as: 'provider',
-          attributes: ['name', 'email'],
-        },
-        {
-          model: User,
-          as: 'user',
-          attributes: ['name'],
-        },
-      ],
+    const meeting = await Meeting.findByPk(req.params.id);
+
+    const subscription = await Subscription.findOne({
+      where: { meeting_id: meeting.id, canceled_at: null },
     });
 
-    if (appointment.user_id !== req.userId) {
+    if (subscription.user_id !== req.userId) {
       return res.status(401).json({
-        error: 'You don´t have permission to cancel this appointment.',
+        error: 'You don´t have permission to cancel this subscription.',
       });
     }
 
-    const dateWithSub = subHours(appointment.date, 2);
+    // const dateWithSub = subHours(appointment.date, 2);
 
-    if (isBefore(dateWithSub, new Date())) {
-      return res.status(401).json({
-        error: 'You can only cancel appointments 2 hours in advance.',
-      });
-    }
+    // if (isBefore(dateWithSub, new Date())) {
+    //   return res.status(401).json({
+    //     error: 'You can only cancel appointments 2 hours in advance.',
+    //   });
+    // }
 
-    appointment.canceled_at = new Date();
+    subscription.canceled_at = new Date();
 
-    await appointment.save();
+    await subscription.save();
 
-    await Queue.add(CancellationMail.key, {
-      appointment,
-    });
+    // await Queue.add(CancellationMail.key, {
+    //   appointment,
+    // });
 
-    return res.json(appointment);
+    return res.json(subscription);
   }
 }
 

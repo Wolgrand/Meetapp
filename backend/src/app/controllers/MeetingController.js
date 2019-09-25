@@ -32,7 +32,7 @@ class MeetingController {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'email'],
           include: [
             {
               model: File,
